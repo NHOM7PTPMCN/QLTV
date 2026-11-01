@@ -196,7 +196,7 @@
            3b. CHỨC NĂNG ĐANG PHÁT TRIỂN  (books, borrows, resources, statistics)
                Khi làm xong chức năng nào thì thay bằng section thật.
            ============================================================= -->
-      <section th:if="${view == 'books' or view == 'borrows' or view == 'resources' or view == 'statistics'}">
+      		   <section th:if="${view == 'borrows' or view == 'resources' or view == 'statistics'}">
         <h3 class="mb-1" th:text="${title}"></h3>
         <div class="text-secondary small mb-4">Chức năng này đang được phát triển</div>
         <div class="panel p-5 text-center text-secondary">Sắp ra mắt</div>
@@ -463,6 +463,420 @@
           </div>
         </div>
       </section>
+	  
+	  
+	  <!-- =============================================================
+	       6. QUẢN LÝ SÁCH (view = books)
+	       ============================================================= -->
+	  <section th:if="${view == 'books'}">
+
+	    <!-- Tiêu đề và nút thêm sách -->
+	    <div class="d-flex justify-content-between align-items-start mb-3">
+	      <div>
+	        <h3 class="mb-0">Quản lý sách</h3>
+	        <div class="text-secondary small">
+	          Quản lý thông tin sách trong thư viện
+	        </div>
+	      </div>
+
+	      <button class="btn btn-primary"
+	              data-bs-toggle="modal"
+	              data-bs-target="#addBookModal">
+	        + Thêm sách
+	      </button>
+	    </div>
+
+	    <!-- Tìm kiếm và lọc -->
+	    <form th:action="@{/books}" method="get" class="row g-2 mb-3">
+
+	      <div class="col-md-5">
+	        <input type="text"
+	               name="q"
+	               th:value="${q}"
+	               class="form-control"
+	               placeholder="Tìm theo tên sách hoặc ISBN...">
+	      </div>
+
+	      <div class="col-md-3">
+	        <select name="categoryId" class="form-select">
+	          <option value="">Tất cả thể loại</option>
+	          <option th:each="c : ${categories}"
+	                  th:value="${c.id}"
+	                  th:text="${c.name}"
+	                  th:selected="${categoryId == c.id}">
+	          </option>
+	        </select>
+	      </div>
+
+	      <div class="col-md-2">
+	        <input type="number"
+	               name="publishYear"
+	               th:value="${publishYear}"
+	               class="form-control"
+	               placeholder="Năm xuất bản">
+	      </div>
+
+	      <div class="col-md-2 d-flex gap-2">
+	        <button type="submit" class="btn btn-primary">Lọc</button>
+	        <a th:href="@{/books}" class="btn btn-outline-secondary">
+	          Xóa lọc
+	        </a>
+	      </div>
+
+	    </form>
+
+	    <!-- Danh sách sách -->
+	    <div class="panel">
+	      <div class="table-responsive">
+	        <table class="table table-hover align-middle mb-0">
+
+	          <thead>
+	            <tr>
+	              <th>ID</th>
+	              <th>Tên sách</th>
+	              <th>ISBN</th>
+	              <th>Năm xuất bản</th>
+	              <th>Tác giả</th>
+	              <th>Thể loại</th>
+	              <th>Nhà xuất bản</th>
+	              <th class="text-end">Thao tác</th>
+	            </tr>
+	          </thead>
+
+	          <tbody>
+	            <tr th:each="b : ${data.content}">
+	              <td th:text="${b.id}"></td>
+
+	              <td>
+	                <div class="fw-semibold" th:text="${b.title}"></div>
+	                <div class="small text-secondary"
+	                     th:if="${b.description != null}"
+	                     th:text="${b.description}">
+	                </div>
+	              </td>
+
+	              <td th:text="${b.isbn != null ? b.isbn : '—'}"></td>
+	              <td th:text="${b.publishYear}"></td>
+	              <td th:text="${authorNames[b.authorId]}"></td>
+	              <td th:text="${categoryNames[b.categoryId]}"></td>
+	              <td th:text="${publisherNames[b.publisherId]}"></td>
+
+				  <td class="text-end text-nowrap">
+
+				      <!-- Nút Xem -->
+				      <button type="button"
+				              class="btn btn-sm btn-outline-info"
+				              data-bs-toggle="modal"
+				              data-bs-target="#viewBookModal"
+				              th:data-id="${b.id}"
+				              th:data-title="${b.title}"
+				              th:data-isbn="${b.isbn}"
+				              th:data-year="${b.publishYear}"
+				              th:data-author="${authorNames[b.authorId]}"
+				              th:data-category="${categoryNames[b.categoryId]}"
+				              th:data-publisher="${publisherNames[b.publisherId]}"
+				              th:data-description="${b.description}"
+				              th:data-cover="${b.coverUrl}"
+				              onclick="viewBook(this)">
+				          Xem
+				      </button>
+
+					  <!-- Nút Sửa -->
+					  <a th:href="@{/books(editId=${b.id}, q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${data.number})}"
+					     class="btn btn-sm btn-outline-warning">
+					      Sửa
+					  </a>
+
+					  <!-- Nút Xóa -->
+				      <form th:action="@{/books/{id}/delete(id=${b.id})}"
+				            method="post"
+				            class="d-inline"
+				            onsubmit="return confirm('Bạn có chắc muốn xóa sách này?')">
+
+				          <button type="submit" class="btn btn-sm btn-outline-danger">
+				              Xóa
+				          </button>
+				      </form>
+				  </td>
+	            </tr>
+
+	            <tr th:if="${data.empty}">
+	              <td colspan="8"
+	                  class="text-center text-secondary py-4">
+	                Không có sách phù hợp
+	              </td>
+	            </tr>
+	          </tbody>
+
+	        </table>
+	      </div>
+
+	      <!-- Phân trang -->
+	      <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary-subtle">
+
+	        <small class="text-secondary">
+	          Hiển thị
+	          <b th:text="${data.numberOfElements}"></b>
+	          trên
+	          <b th:text="${data.totalElements}"></b>
+	          sách
+	        </small>
+
+	        <ul class="pagination pagination-sm mb-0"
+	            th:if="${data.totalPages > 1}">
+
+	          <li class="page-item"
+	              th:each="i : ${#numbers.sequence(0, data.totalPages - 1)}"
+	              th:classappend="${i == data.number} ? 'active'">
+
+	            <a class="page-link"
+	               th:href="@{/books(q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${i})}"
+	               th:text="${i + 1}">
+	            </a>
+
+	          </li>
+	        </ul>
+	      </div>
+	    </div>
+
+	    <!-- Modal thêm sách -->
+	    <div class="modal fade" id="addBookModal" tabindex="-1">
+	      <div class="modal-dialog modal-lg">
+
+			<form id="bookForm" class="modal-content"
+			  th:action="@{/books/save}"
+			  method="post">
+
+			<input type="hidden" name="id" id="bookId">
+
+	          <div class="modal-header">
+	            <h5 class="modal-title" id="bookModalTitle">Thêm sách mới</h5>
+	            <button type="button"
+	                    class="btn-close"
+	                    data-bs-dismiss="modal">
+	            </button>
+	          </div>
+
+	          <div class="modal-body">
+
+	            <div class="mb-3">
+	              <label class="form-label">Tên sách</label>
+	              <input type="text"
+	                     name="title"
+	                     class="form-control"
+	                     placeholder="Nhập tên sách"
+	                     required>
+	            </div>
+
+	            <div class="row">
+	              <div class="col-md-6 mb-3">
+	                <label class="form-label">Tác giả</label>
+	                <input type="text"
+	                       name="authorName"
+	                       class="form-control"
+	                       list="authorOptions"
+	                       placeholder="Nhập tên tác giả"
+	                       required>
+
+	                <datalist id="authorOptions">
+	                  <option th:each="a : ${authors}"
+	                          th:value="${a.name}">
+	                  </option>
+	                </datalist>
+	              </div>
+
+	              <div class="col-md-6 mb-3">
+	                <label class="form-label">Nhà xuất bản</label>
+	                <input type="text"
+	                       name="publisherName"
+	                       class="form-control"
+	                       list="publisherOptions"
+	                       placeholder="Nhập nhà xuất bản"
+	                       required>
+
+	                <datalist id="publisherOptions">
+	                  <option th:each="p : ${publishers}"
+	                          th:value="${p.name}">
+	                  </option>
+	                </datalist>
+	              </div>
+	            </div>
+
+	            <div class="row">
+	              <div class="col-md-6 mb-3">
+	                <label class="form-label">Thể loại</label>
+	                <select name="categoryId"
+	                        class="form-select"
+	                        required>
+
+	                  <option value="">-- Chọn thể loại --</option>
+	                  <option th:each="c : ${categories}"
+	                          th:value="${c.id}"
+	                          th:text="${c.name}">
+	                  </option>
+	                </select>
+	              </div>
+
+	              <div class="col-md-6 mb-3">
+	                <label class="form-label">Năm xuất bản</label>
+	                <input type="number"
+	                       name="publishYear"
+	                       class="form-control"
+	                       min="1000"
+	                       max="2100"
+	                       placeholder="Ví dụ: 2024"
+	                       required>
+	              </div>
+	            </div>
+
+	            <div class="mb-3">
+	              <label class="form-label">Mô tả</label>
+	              <textarea name="description"
+	                        class="form-control"
+	                        rows="3"
+	                        placeholder="Nhập mô tả sách"></textarea>
+	            </div>
+
+	            <div class="small text-secondary">
+	              ISBN sẽ được hệ thống tự động tạo khi thêm sách.
+	            </div>
+
+	          </div>
+
+	          <div class="modal-footer">
+	            <button type="button"
+	                    class="btn btn-outline-secondary"
+	                    data-bs-dismiss="modal">
+	              Hủy bỏ
+	            </button>
+
+	            <button type="submit" class="btn btn-primary">
+	              Lưu sách
+	            </button>
+	          </div>
+
+	        </form>
+	      </div>
+	    </div>
+		</form>
+
+		    </div>
+
+		  </div>
+
+		  <!-- Modal sửa sách -->
+		  <div class="modal fade"
+		  id="editBookModal"
+		  tabindex="-1"
+		  th:if="${editingBook != null}"
+		  th:classappend="' show d-block'">
+		      <div class="modal-dialog modal-lg">
+		          <form class="modal-content"
+		                th:action="@{/books/save}"
+		                method="post">
+
+						<input type="hidden"
+						name="id"
+						th:value="${editingBook != null ? editingBook.id : ''}">
+						
+		              <div class="modal-header">
+		                  <h5 class="modal-title">Sửa thông tin sách</h5>
+						  <a th:href="@{/books(q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${data.number})}"
+						  class="btn-close"
+						  aria-label="Đóng"></a>
+		              </div>
+
+		              <div class="modal-body">
+
+						<div class="mb-3">
+						    <label class="form-label">Tên sách</label>
+						    <input type="text"
+						           name="title"
+						           class="form-control"
+						           th:value="${editingBook.title}"
+						           required>
+						</div>
+
+						<div class="row">
+						    <div class="col-md-6 mb-3">
+						        <label class="form-label">Tác giả</label>
+						        <input type="text"
+						               name="authorName"
+						               class="form-control"
+						               th:value="${editingAuthorName}"
+						               required>
+						    </div>
+
+						    <div class="col-md-6 mb-3">
+						        <label class="form-label">Nhà xuất bản</label>
+						        <input type="text"
+						               name="publisherName"
+						               class="form-control"
+						               th:value="${editingPublisherName}"
+						               required>
+						    </div>
+						</div>
+
+						<div class="row">
+						    <div class="col-md-6 mb-3">
+						        <label class="form-label">Thể loại</label>
+						        <select name="categoryId" class="form-select" required>
+						            <option value="">-- Chọn thể loại --</option>
+
+						            <option th:each="c : ${categories}"
+						                    th:value="${c.id}"
+						                    th:text="${c.name}"
+						                    th:selected="${c.id == editingBook.categoryId}">
+						            </option>
+						        </select>
+						    </div>
+
+						    <div class="col-md-6 mb-3">
+						        <label class="form-label">Năm xuất bản</label>
+						        <input type="number"
+						               name="publishYear"
+						               class="form-control"
+						               th:value="${editingBook.publishYear}"
+						               min="1000"
+						               max="2100"
+						               required>
+						    </div>
+						</div>
+
+						<div class="mb-3">
+						    <label class="form-label">Mô tả</label>
+						    <textarea name="description"
+						              class="form-control"
+						              rows="3"
+						              placeholder="Nhập mô tả sách"
+						              th:text="${editingBook.description}"></textarea>
+						</div>
+
+						<div class="small text-secondary">
+						    ISBN của sách được giữ nguyên khi cập nhật.
+						</div>
+
+						</div>
+
+		              <div class="modal-footer">
+						<a th:href="@{/books(q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${data.number})}"
+						   class="btn btn-outline-secondary">
+						    Hủy bỏ
+						</a>
+		                  <button type="submit" class="btn btn-primary">
+		                      Lưu thay đổi
+		                  </button>
+		              </div>
+
+		          </form>
+		      </div>
+		  </div>
+		  <div class="modal-backdrop fade show"
+		       th:if="${editingBook != null}">
+		  </div>
+
+		</section>
+	  </section>
 
     </div><!-- /.page -->
   </main>
@@ -470,7 +884,7 @@
 
 
 <!-- =====================================================================
-     6. JAVASCRIPT (thay cho main.js)
+     7. JAVASCRIPT (thay cho main.js)
      ===================================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
