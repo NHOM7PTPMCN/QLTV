@@ -1,0 +1,46 @@
+body { min-height: 100vh; background: #070b17; }
+
+/* ---------- Đăng nhập / đăng ký ---------- */
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.auth-card { width: 100%; max-width: 400px; padding: 1.75rem; }
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
+  padding: 1rem; background: #0b1020; border-right: 1px solid #1f2937;
+}
+.brand { display: flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem; color: #fff; }
+.brand-logo {
+  width: 36px; height: 36px; border-radius: .6rem; background: #2563eb;
+  display: flex; align-items: center; justify-content: center; font-weight: 700;
+}
+.menu-title { font-size: .7rem; letter-spacing: .08em; color: #6b7280; margin: 1.2rem 0 .5rem .5rem; }
+.menu-item {
+  display: block; padding: .55rem .75rem; margin-bottom: .15rem;
+  border-radius: .5rem; color: #cbd5e1; text-decoration: none;
+}
+.menu-item:hover { background: #161d33; color: #fff; }
+.menu-item.active { background: #2563eb; color: #fff; }
+
+/* ---------- Nội dung ---------- */
+.content { margin-left: 240px; }
+.topbar {
+  display: flex; justify-content: flex-end; align-items: center; gap: 1rem;
+  padding: .75rem 1.5rem; border-bottom: 1px solid #1f2937; background: #0b1020;
+}
+.page { padding: 1.5rem; }
+
+.panel { background: #0f1527; border: 1px solid #1f2937; border-radius: .75rem; overflow: hidden; }
+.panel .table { margin: 0; --bs-table-bg: transparent; }
+.panel th { font-size: .7rem; letter-spacing: .06em; color: #6b7280; text-transform: uppercase; }
+
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%; background: #1f2937;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .75rem; margin-right: .5rem;
+}
+
+@media (max-width: 768px) {
+  .sidebar { position: static; width: 100%; }
+  .content { margin-left: 0; }
+}
