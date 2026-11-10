@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="dark"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LibraFlow - Quản lý thư viện</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+
+<!-- =====================================================================
+     1. ĐĂNG NHẬP / ĐĂNG KÝ  (view = login | register)
+     ===================================================================== -->
+<div class="auth-wrap" th:if="${view == 'login' or view == 'register' or view == 'forgot'}">
+
+  <!-- ---------- Đăng nhập ---------- -->
+  <form th:if="${view == 'login'}" th:action="@{/login}" method="post" class="panel auth-card">
+    <div class="brand">
+      <div class="brand-logo">L</div>
+      <div class="lh-sm">
+        <div class="fw-bold">LibraFlow</div>
+        <div class="small text-secondary">Quản lý thư viện</div>
+      </div>
+    </div>
+    <h5 class="mb-3">Đăng nhập</h5>
+
+    <div class="alert alert-danger py-2" th:if="${param.error}">Sai tên đăng nhập, mật khẩu hoặc tài khoản đã bị khóa</div>
+    <div class="alert alert-info py-2" th:if="${param.logout}">Bạn đã đăng xuất</div>
+    <div class="alert alert-success py-2" th:if="${param.registered}">Đăng ký thành công, hãy đăng nhập</div>
+    <div class="alert alert-success py-2" th:if="${param.reset}">Đặt lại mật khẩu thành công, hãy đăng nhập</div>
+
+    <div class="mb-3">
+      <label class="form-label">Tên đăng nhập</label>
+      <input type="text" name="username" class="form-control" required autofocus>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Mật khẩu</label>
+      <input type="password" name="password" class="form-control" required>
+      <div class="text-end small mt-1"><a th:href="@{/forgot-password}">Quên mật khẩu?</a></div>
+    </div>
+    <button class="btn btn-primary w-100">Đăng nhập</button>
+    <div class="text-center small mt-3 text-secondary">
+      Chưa có tài khoản? <a th:href="@{/register}">Đăng ký</a>
+    </div>
+  </form>
+
+  <!-- ---------- Đăng ký ---------- -->
+  <form th:if="${view == 'register'}" th:action="@{/register}" method="post" class="panel auth-card">
+    <div class="brand">
+      <div class="brand-logo">L</div>
+      <div class="lh-sm">
+        <div class="fw-bold">LibraFlow</div>
+        <div class="small text-secondary">Quản lý thư viện</div>
+      </div>
+    </div>
+    <h5 class="mb-3">Đăng ký tài khoản độc giả</h5>
+
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="mb-3">
+      <label class="form-label">Họ tên</label>
+      <input type="text" name="fullName" class="form-control" required
+             th:value="${param.fullName != null ? param.fullName[0] : ''}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Mã thẻ độc giả</label>
+      <input type="text" name="readerCode" class="form-control" placeholder="Ví dụ: DG001" required
+             th:value="${param.readerCode != null ? param.readerCode[0] : ''}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control"
+             th:value="${param.email != null ? param.email[0] : ''}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Tên đăng nhập</label>
+      <input type="text" name="username" class="form-control" minlength="4" required
+             th:value="${param.username != null ? param.username[0] : ''}">
+    </div>
+    <div class="row">
+      <div class="col mb-3">
+        <label class="form-label">Mật khẩu</label>
+        <input type="password" name="password" class="form-control" minlength="6" required>
+      </div>
+      <div class="col mb-3">
+        <label class="form-label">Nhập lại</label>
+        <input type="password" name="confirm" class="form-control" minlength="6" required>
+      </div>
+    </div>
+    <button class="btn btn-primary w-100">Đăng ký</button>
+    <div class="text-center small mt-3 text-secondary">
+      Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a>
+    </div>
+  </form>
+
+  <!-- ---------- Quên mật khẩu ---------- -->
+  <form th:if="${view == 'forgot'}" th:action="@{/forgot-password}" method="post" class="panel auth-card">
+    <div class="brand">
+      <div class="brand-logo">L</div>
+      <div class="lh-sm">
+        <div class="fw-bold">LibraFlow</div>
+        <div class="small text-secondary">Quản lý thư viện</div>
+      </div>
+    </div>
+    <h5 class="mb-1">Quên mật khẩu</h5>
+    <div class="text-secondary small mb-3">Nhập tên đăng nhập và email đã đăng ký để đặt mật khẩu mới</div>
+
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="mb-3">
+      <label class="form-label">Tên đăng nhập</label>
+      <input type="text" name="username" class="form-control" required autofocus
+             th:value="${param.username != null ? param.username[0] : ''}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email đã đăng ký</label>
+      <input type="email" name="email" class="form-control" required
+             th:value="${param.email != null ? param.email[0] : ''}">
+    </div>
+    <div class="row">
+      <div class="col mb-3">
+        <label class="form-label">Mật khẩu mới</label>
+        <input type="password" name="password" class="form-control" minlength="6" required>
+      </div>
+      <div class="col mb-3">
+        <label class="form-label">Nhập lại</label>
+        <input type="password" name="confirm" class="form-control" minlength="6" required>
+      </div>
+    </div>
+    <button class="btn btn-primary w-100">Đặt lại mật khẩu</button>
+    <div class="text-center small mt-3 text-secondary">
+      <a th:href="@{/login}">Quay lại đăng nhập</a>
+    </div>
+  </form>
+</div>
+
+
+<!-- =====================================================================
+     2. KHUNG ỨNG DỤNG: sidebar + topbar  (mọi view còn lại)
+     ===================================================================== -->
+<th:block th:unless="${view == 'login' or view == 'register' or view == 'forgot'}">
+
+  <!-- ---------- Sidebar ----------
+       Giá trị vai trò (roleCode): 0 = Admin, 1 = Thủ thư, 2 = Độc giả
+       Chức năng không thuộc vai trò thì KHÔNG hiển thị, các mục bên dưới tự đẩy lên.
+
+       Nhóm / Chức năng                     | Vai trò được thấy
+       -------------------------------------|------------------
+       Tổng quan                            | 0, 1, 2
+       [1] Tài khoản & Độc giả              |
+           Quản lý độc giả                  | 0, 1
+           Quản lý tài khoản                | 0
+       [2] Sách                             |
+           Quản lý sách                     | 0, 1, 2
+       [3] Mượn / Trả sách                  |
+           Quản lý phiếu mượn               | 0, 1, 2
+       [4] Tài liệu số & Thống kê           |
+           Tài liệu số                      | 0, 1, 2
+           Thống kê                         | 0, 1
+  -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">L</div>
+      <div class="lh-sm">
+        <div class="fw-bold">LibraFlow</div>
+        <div class="small text-secondary">Quản lý thư viện</div>
+      </div>
+    </div>
+
+    <!-- Tổng quan: 0, 1, 2 -->
+    <div class="menu-title">MENU CHÍNH</div>
+    <a th:href="@{/}" class="menu-item" th:classappend="${view == 'home'} ? 'active'">Tổng quan</a>
+
+    <!-- [1] QUẢN LÝ TÀI KHOẢN & ĐỘC GIẢ: chỉ 0, 1 thấy nhóm này -->
+    <th:block th:if="${roleCode == 0 or roleCode == 1}">
+      <div class="menu-title">TÀI KHOẢN &amp; ĐỘC GIẢ</div>
+      <a th:href="@{/readers}" class="menu-item"
+         th:classappend="${view == 'readers'} ? 'active'">Quản lý độc giả</a>
+      <a th:if="${roleCode == 0}" th:href="@{/accounts}" class="menu-item"
+         th:classappend="${view == 'accounts'} ? 'active'">Quản lý tài khoản</a>
+    </th:block>
+
+    <!-- [2] QUẢN LÝ SÁCH: 0, 1, 2 -->
+    <div class="menu-title">SÁCH</div>
+    <a th:href="@{/books}" class="menu-item"
+       th:classappend="${view == 'books'} ? 'active'">Quản lý sách</a>
+
+    <!-- [3] MƯỢN / TRẢ SÁCH: 0, 1, 2 -->
+    <div class="menu-title">MƯỢN / TRẢ SÁCH</div>
+    <a th:href="@{/borrows}" class="menu-item"
+       th:classappend="${view == 'borrows'} ? 'active'">Quản lý phiếu mượn</a>
+
+    <!-- [4] TÀI LIỆU SỐ & THỐNG KÊ: tài liệu số 0, 1, 2 - thống kê 0, 1 -->
+    <div class="menu-title">TÀI LIỆU SỐ &amp; THỐNG KÊ</div>
+    <a th:href="@{/resources}" class="menu-item"
+       th:classappend="${view == 'resources'} ? 'active'">Tài liệu số</a>
+    <a th:if="${roleCode == 0 or roleCode == 1}" th:href="@{/statistics}" class="menu-item"
+       th:classappend="${view == 'statistics'} ? 'active'">Thống kê</a>
+  </aside>
+
+  <main class="content">
+
+    <!-- ---------- Topbar ---------- -->
+    <header class="topbar">
+      <a th:href="@{/profile}" class="text-end lh-sm text-decoration-none text-reset" title="Thông tin cá nhân">
+        <div class="small fw-semibold" sec:authentication="name"></div>
+        <div class="small text-secondary"
+             th:text="${roleCode == 0 ? 'Quản trị viên' : (roleCode == 1 ? 'Thủ thư' : 'Độc giả')}"></div>
+      </a>
+      <form th:action="@{/logout}" method="post">
+        <button class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
+      </form>
+    </header>
+
+    <div class="page">
+
+      <!-- Thông báo sau khi thao tác -->
+      <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+      <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+
+      <!-- =============================================================
+           3. TRANG CHỦ  (view = home)
+           ============================================================= -->
+      <section th:if="${view == 'home'}">
+        <h3 class="mb-1">Tổng quan</h3>
+        <div class="text-secondary small mb-4">Chào mừng bạn đến với hệ thống quản lý thư viện</div>
+        <div class="panel p-4">
+          Xin chào <b sec:authentication="name"></b>. Chọn chức năng ở thanh menu bên trái để bắt đầu.
+        </div>
+      </section>
+
+
+      <!-- =============================================================
+           3a. THÔNG TIN CÁ NHÂN + ĐỔI MẬT KHẨU  (view = profile)
+           ============================================================= -->
+      <section th:if="${view == 'profile'}">
+        <h3 class="mb-1">Thông tin cá nhân</h3>
+        <div class="text-secondary small mb-4">Xem và cập nhật thông tin tài khoản của bạn</div>
+
+        <div class="row g-3">
+          <!-- Thông tin cá nhân -->
+          <div class="col-lg-7">
+            <form class="panel p-4" th:action="@{/profile}" method="post">
+              <h5 class="mb-3">Thông tin tài khoản</h5>
+
+              <div class="row">
+                <div class="col mb-3">
+                  <label class="form-label">Tên đăng nhập</label>
+                  <input type="text" class="form-control" th:value="${account.username}" readonly>
+                </div>
+                <div class="col mb-3">
+                  <label class="form-label">Vai trò</label>
+                  <input type="text" class="form-control" th:value="${account.role.label}" readonly>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Họ tên</label>
+                <input type="text" name="fullName" class="form-control" required th:value="${account.fullName}">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" th:value="${account.email}">
+              </div>
+
+              <!-- Chỉ hiện nếu tài khoản là độc giả -->
+              <th:block th:if="${reader != null}">
+                <div class="mb-3">
+                  <label class="form-label">Mã thẻ độc giả</label>
+                  <input type="text" class="form-control" th:value="${reader.readerCode}" readonly>
+                </div>
+                <div class="row">
+                  <div class="col mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" name="phone" class="form-control" th:value="${reader.phone}">
+                  </div>
+                  <div class="col mb-3">
+                    <label class="form-label">Ngày sinh</label>
+                    <input type="date" name="birthDate" class="form-control" th:value="${reader.birthDate}">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Địa chỉ</label>
+                  <input type="text" name="address" class="form-control" th:value="${reader.address}">
+                </div>
+              </th:block>
+
+              <button class="btn btn-primary">Lưu thay đổi</button>
+            </form>
+          </div>
+
+          <!-- Đổi mật khẩu -->
+          <div class="col-lg-5">
+            <form class="panel p-4" th:action="@{/profile/password}" method="post">
+              <h5 class="mb-3">Đổi mật khẩu</h5>
+              <div class="mb-3">
+                <label class="form-label">Mật khẩu hiện tại</label>
+                <input type="password" name="oldPassword" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Mật khẩu mới</label>
+                <input type="password" name="newPassword" class="form-control" minlength="6" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nhập lại mật khẩu mới</label>
+                <input type="password" name="confirm" class="form-control" minlength="6" required>
+              </div>
+              <button class="btn btn-primary">Đổi mật khẩu</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- =============================================================
+           3b. CHỨC NĂNG ĐANG PHÁT TRIỂN  (books, borrows, resources, statistics)
+               Khi làm xong chức năng nào thì thay bằng section thật.
+           ============================================================= -->
+      		   <section th:if="${view == 'borrows' or view == 'resources' or view == 'statistics'}">
+        <h3 class="mb-1" th:text="${title}"></h3>
+        <div class="text-secondary small mb-4">Chức năng này đang được phát triển</div>
+        <div class="panel p-5 text-center text-secondary">Sắp ra mắt</div>
+      </section>
+
+
+      <!-- =============================================================
+           4. QUẢN LÝ TÀI KHOẢN  (view = accounts)
+           ============================================================= -->
+      <section th:if="${view == 'accounts'}">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h3 class="mb-0">Quản lý tài khoản</h3>
+            <div class="text-secondary small">Quản lý tài khoản Quản trị viên và Thủ thư</div>
+          </div>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#accountModal"
+                  onclick="openAccAdd()">+ Thêm tài khoản</button>
+        </div>
+
+        <form th:action="@{/accounts}" method="get" class="mb-3" style="max-width: 360px;">
+          <input type="text" name="q" th:value="${q}" class="form-control"
+                 placeholder="Tìm theo tên đăng nhập, họ tên...">
+        </form>
+
+        <div class="panel">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Tài khoản</th>
+                <th>Mật khẩu</th><th>Trạng thái</th><th class="text-end">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="a : ${data.content}">
+                <td>
+                  <span class="avatar" th:text="${#strings.substring(a.fullName, 0, 1)}"></span>
+                  <span th:text="${a.fullName}"></span>
+                </td>
+                <td th:text="${a.email}"></td>
+                <td th:text="${a.role.label}"></td>
+                <td class="text-primary" th:text="${a.username}"></td>
+                <td><span class="pw-text" th:text="${a.password}"></span></td>
+                <td>
+                  <span class="badge text-bg-success" th:if="${a.active}">Hoạt động</span>
+                  <span class="badge text-bg-secondary" th:unless="${a.active}">Đã khóa</span>
+                </td>
+                <td class="text-end text-nowrap">
+                  <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                          data-bs-target="#accountModal" onclick="openAccEdit(this)"
+                          th:data-id="${a.id}" th:data-username="${a.username}"
+                          th:data-fullname="${a.fullName}" th:data-email="${a.email}"
+                          th:data-role="${a.role.name()}" th:data-active="${a.active}"
+                          th:data-password="${a.password}">Sửa</button>
+
+                  <form th:action="@{/accounts/{id}/toggle(id=${a.id})}" method="post" class="d-inline">
+                    <button class="btn btn-sm btn-outline-warning" th:text="${a.active} ? 'Khóa' : 'Mở khóa'"></button>
+                  </form>
+
+                  <form th:action="@{/accounts/{id}/delete(id=${a.id})}" method="post" class="d-inline"
+                        onsubmit="return confirm('Xóa tài khoản này?')">
+                    <button class="btn btn-sm btn-outline-danger">Xóa</button>
+                  </form>
+                </td>
+              </tr>
+              <tr th:if="${data.empty}">
+                <td colspan="7" class="text-center text-secondary py-4">Không có dữ liệu</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary-subtle">
+            <small class="text-secondary">Hiển thị <b th:text="${data.numberOfElements}"></b> trên
+              <b th:text="${data.totalElements}"></b> tài khoản</small>
+            <ul class="pagination pagination-sm mb-0" th:if="${data.totalPages > 1}">
+              <li class="page-item" th:each="i : ${#numbers.sequence(0, data.totalPages - 1)}"
+                  th:classappend="${i == data.number} ? 'active'">
+                <a class="page-link" th:href="@{/accounts(q=${q}, page=${i})}" th:text="${i + 1}"></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Modal thêm / sửa tài khoản (danh sách vai trò chỉ có Quản trị viên, Thủ thư) -->
+        <div class="modal fade" id="accountModal" tabindex="-1">
+          <div class="modal-dialog">
+            <form id="accountForm" class="modal-content" th:action="@{/accounts/save}" method="post">
+              <div class="modal-header">
+                <h5 class="modal-title" id="accTitle">Thêm tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" name="id" id="accId">
+                <div class="mb-3">
+                  <label class="form-label">Tên đăng nhập</label>
+                  <input type="text" name="username" id="accUsername" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Họ tên</label>
+                  <input type="text" name="fullName" id="accFullName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" name="email" id="accEmail" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Mật khẩu</label>
+                  <input type="text" name="password" id="accPassword" class="form-control pw-text"
+                         minlength="6" autocomplete="off" required>
+                </div>
+                <div class="row">
+                  <div class="col mb-3">
+                    <label class="form-label">Vai trò</label>
+                    <select name="role" id="accRole" class="form-select" required>
+                      <option th:each="r : ${roles}" th:value="${r.name()}" th:text="${r.label}"></option>
+                    </select>
+                  </div>
+                  <div class="col mb-3">
+                    <label class="form-label">Trạng thái</label>
+                    <select name="active" id="accActive" class="form-select">
+                      <option value="true">Hoạt động</option>
+                      <option value="false">Đã khóa</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="submit" class="btn btn-primary">Lưu</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- =============================================================
+           5. QUẢN LÝ ĐỘC GIẢ  (view = readers)
+           ============================================================= -->
+      <section th:if="${view == 'readers'}">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h3 class="mb-0">Quản lý độc giả</h3>
+            <div class="text-secondary small">Theo dõi và quản lý thông tin độc giả</div>
+          </div>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#readerModal"
+                  onclick="openRdAdd()">+ Thêm độc giả</button>
+        </div>
+
+        <form th:action="@{/readers}" method="get" class="mb-3" style="max-width: 360px;">
+          <input type="text" name="q" th:value="${q}" class="form-control"
+                 placeholder="Tìm theo mã, họ tên, email...">
+        </form>
+
+        <div class="panel">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Mã độc giả</th><th>Họ tên</th><th>Email</th><th>Tài khoản</th>
+                <th>Mật khẩu</th><th>Trạng thái</th><th class="text-end">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="r : ${data.content}">
+                <td class="text-primary" th:text="${r.readerCode}"></td>
+                <td>
+                  <span class="avatar" th:text="${#strings.substring(r.fullName, 0, 1)}"></span>
+                  <span th:text="${r.fullName}"></span>
+                </td>
+                <td th:text="${r.email}"></td>
+                <td th:text="${r.account.username}"></td>
+                <td><span class="pw-text" th:text="${r.account.password}"></span></td>
+                <td>
+                  <span class="badge text-bg-success" th:if="${r.active}">Hoạt động</span>
+                  <span class="badge text-bg-secondary" th:unless="${r.active}">Ngừng hoạt động</span>
+                </td>
+                <td class="text-end text-nowrap">
+                  <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                          data-bs-target="#readerModal" onclick="openRdEdit(this)"
+                          th:data-id="${r.id}" th:data-code="${r.readerCode}" th:data-fullname="${r.fullName}"
+                          th:data-email="${r.email}" th:data-username="${r.account.username}"
+                          th:data-phone="${r.phone}" th:data-address="${r.address}"
+                          th:data-birth="${r.birthDate}" th:data-active="${r.active}"
+                          th:data-password="${r.account.password}">Sửa</button>
+
+                  <form th:action="@{/readers/{id}/delete(id=${r.id})}" method="post" class="d-inline"
+                        onsubmit="return confirm('Xóa độc giả này? Tài khoản đăng nhập của độc giả cũng bị xóa.')">
+                    <button class="btn btn-sm btn-outline-danger">Xóa</button>
+                  </form>
+                </td>
+              </tr>
+              <tr th:if="${data.empty}">
+                <td colspan="7" class="text-center text-secondary py-4">Không có dữ liệu</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary-subtle">
+            <small class="text-secondary">Hiển thị <b th:text="${data.numberOfElements}"></b> trên
+              <b th:text="${data.totalElements}"></b> độc giả</small>
+            <ul class="pagination pagination-sm mb-0" th:if="${data.totalPages > 1}">
+              <li class="page-item" th:each="i : ${#numbers.sequence(0, data.totalPages - 1)}"
+                  th:classappend="${i == data.number} ? 'active'">
+                <a class="page-link" th:href="@{/readers(q=${q}, page=${i})}" th:text="${i + 1}"></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Modal thêm / sửa độc giả (thứ tự trường khớp với cột của bảng) -->
+        <div class="modal fade" id="readerModal" tabindex="-1">
+          <div class="modal-dialog">
+            <form id="readerForm" class="modal-content" th:action="@{/readers/save}" method="post">
+              <div class="modal-header">
+                <h5 class="modal-title" id="rdTitle">Thêm độc giả</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" name="id" id="rdId">
+
+                <div class="mb-3">
+                  <label class="form-label">Mã thẻ độc giả</label>
+                  <input type="text" name="readerCode" id="rdCode" class="form-control"
+                         placeholder="Ví dụ: DG001" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Họ tên</label>
+                  <input type="text" name="fullName" id="rdFullName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" name="email" id="rdEmail" class="form-control">
+                </div>
+
+                <div class="row">
+                  <div class="col mb-1">
+                    <label class="form-label">Tài khoản (tên đăng nhập)</label>
+                    <input type="text" name="username" id="rdUsername" class="form-control"
+                           minlength="4" autocomplete="off" required>
+                  </div>
+                  <div class="col mb-1">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="text" name="password" id="rdPassword" class="form-control pw-text"
+                           minlength="6" autocomplete="off" required>
+                  </div>
+                </div>
+                <div class="mb-3"></div>
+
+                <div class="mb-3">
+                  <label class="form-label">Trạng thái</label>
+                  <select name="active" id="rdActive" class="form-select">
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Ngừng hoạt động</option>
+                  </select>
+                </div>
+
+                <div class="row">
+                  <div class="col mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" name="phone" id="rdPhone" class="form-control">
+                  </div>
+                  <div class="col mb-3">
+                    <label class="form-label">Ngày sinh</label>
+                    <input type="date" name="birthDate" id="rdBirth" class="form-control">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Địa chỉ</label>
+                  <input type="text" name="address" id="rdAddress" class="form-control">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="submit" class="btn btn-primary">Lưu</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+
+	  <!-- =============================================================
+	       6. QUẢN LÝ SÁCH (view = books)
+	       ============================================================= -->
+	  <section th:if="${view == 'books'}">
+
+	    <!-- Tiêu đề và nút thêm sách -->
+	    <div class="d-flex justify-content-between align-items-start mb-3">
+	      <div>
+	        <h3 class="mb-0">Quản lý sách</h3>
+	        <div class="text-secondary small">
+	          Quản lý thông tin sách trong thư viện
+	        </div>
+	      </div>
+
+	      <button class="btn btn-primary"
+	              data-bs-toggle="modal"
+	              data-bs-target="#addBookModal">
+	        + Thêm sách
+	      </button>
+	    </div>
+
+	    <!-- Tìm kiếm và lọc -->
+	    <form th:action="@{/books}" method="get" class="row g-2 mb-3">
+
+	      <div class="col-md-5">
+	        <input type="text"
+	               name="q"
+	               th:value="${q}"
+	               class="form-control"
+	               placeholder="Tìm theo tên sách hoặc ISBN...">
+	      </div>
+
+	      <div class="col-md-3">
+	        <select name="categoryId" class="form-select">
+	          <option value="">Tất cả thể loại</option>
+	          <option th:each="c : ${categories}"
+	                  th:value="${c.id}"
+	                  th:text="${c.name}"
+	                  th:selected="${categoryId == c.id}">
+	          </option>
+	        </select>
+	      </div>
+
+	      <div class="col-md-2">
+	        <input type="number"
+	               name="publishYear"
+	               th:value="${publishYear}"
+	               class="form-control"
+	               placeholder="Năm xuất bản">
+	      </div>
+
+	      <div class="col-md-2 d-flex gap-2">
+	        <button type="submit" class="btn btn-primary">Lọc</button>
+	        <a th:href="@{/books}" class="btn btn-outline-secondary">
+	          Xóa lọc
+	        </a>
+	      </div>
+
+	    </form>
+
+	    <!-- Danh sách sách -->
+	    <div class="panel">
+	      <div class="table-responsive">
+	        <table class="table table-hover align-middle mb-0">
+
+	          <thead>
+	            <tr>
+	              <th>ID</th>
+	              <th>Tên sách</th>
+	              <th>ISBN</th>
+	              <th>Năm xuất bản</th>
+	              <th>Tác giả</th>
+	              <th>Thể loại</th>
+	              <th>Nhà xuất bản</th>
+	              <th class="text-end">Thao tác</th>
+	            </tr>
+	          </thead>
+
+	          <tbody>
+	            <tr th:each="b : ${data.content}">
+	              <td th:text="${b.id}"></td>
+
+	              <td>
+	                <div class="fw-semibold" th:text="${b.title}"></div>
+	                <div class="small text-secondary"
+	                     th:if="${b.description != null}"
+	                     th:text="${b.description}">
+	                </div>
+	              </td>
+
+	              <td th:text="${b.isbn != null ? b.isbn : '—'}"></td>
+	              <td th:text="${b.publishYear}"></td>
+	              <td th:text="${authorNames[b.authorId]}"></td>
+	              <td th:text="${categoryNames[b.categoryId]}"></td>
+	              <td th:text="${publisherNames[b.publisherId]}"></td>
+
+				  <td class="text-end text-nowrap">
+
+				      <!-- Nút Xem -->
+				      <button type="button"
+				              class="btn btn-sm btn-outline-info"
+				              data-bs-toggle="modal"
+				              data-bs-target="#viewBookModal"
+				              th:data-id="${b.id}"
+				              th:data-title="${b.title}"
+				              th:data-isbn="${b.isbn}"
+				              th:data-year="${b.publishYear}"
+				              th:data-author="${authorNames[b.authorId]}"
+				              th:data-category="${categoryNames[b.categoryId]}"
+				              th:data-publisher="${publisherNames[b.publisherId]}"
+				              th:data-description="${b.description}"
+				              th:data-cover="${b.coverUrl}"
+				              onclick="viewBook(this)">
+				          Xem
+				      </button>
+
+					  <!-- Nút Sửa -->
+					  <a th:href="@{/books(editId=${b.id}, q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${data.number})}"
+					     class="btn btn-sm btn-outline-warning">
+					      Sửa
+					  </a>
+
+					  <!-- Nút Xóa -->
+				      <form th:action="@{/books/{id}/delete(id=${b.id})}"
+				            method="post"
+				            class="d-inline"
+				            onsubmit="return confirm('Bạn có chắc muốn xóa sách này?')">
+
+				          <button type="submit" class="btn btn-sm btn-outline-danger">
+				              Xóa
+				          </button>
+				      </form>
+				  </td>
+	            </tr>
+
+	            <tr th:if="${data.empty}">
+	              <td colspan="8"
+	                  class="text-center text-secondary py-4">
+	                Không có sách phù hợp
+	              </td>
+	            </tr>
+	          </tbody>
+
+	        </table>
+	      </div>
+
+	      <!-- Phân trang -->
+	      <div class="d-flex justify-content-between align-items-center p-3 border-top border-secondary-subtle">
+
+	        <small class="text-secondary">
+	          Hiển thị
+	          <b th:text="${data.numberOfElements}"></b>
+	          trên
+	          <b th:text="${data.totalElements}"></b>
+	          sách
+	        </small>
+
+	        <ul class="pagination pagination-sm mb-0"
+	            th:if="${data.totalPages > 1}">
+
+	          <li class="page-item"
+	              th:each="i : ${#numbers.sequence(0, data.totalPages - 1)}"
+	              th:classappend="${i == data.number} ? 'active'">
+
+	            <a class="page-link"
+	               th:href="@{/books(q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${i})}"
+	               th:text="${i + 1}">
+	            </a>
+
+	          </li>
+	        </ul>
+	      </div>
+	    </div>
+
+	    <!-- Modal thêm sách -->
+	    <div class="modal fade" id="addBookModal" tabindex="-1">
+	      <div class="modal-dialog modal-lg">
+
+			<form id="bookForm" class="modal-content"
+			  th:action="@{/books/save}"
+			  method="post">
+
+			<input type="hidden" name="id" id="bookId">
+
+	          <div class="modal-header">
+	            <h5 class="modal-title" id="bookModalTitle">Thêm sách mới</h5>
+	            <button type="button"
+	                    class="btn-close"
+	                    data-bs-dismiss="modal">
+	            </button>
+	          </div>
+
+	          <div class="modal-body">
+
+	            <div class="mb-3">
+	              <label class="form-label">Tên sách</label>
+	              <input type="text"
+	                     name="title"
+	                     class="form-control"
+	                     placeholder="Nhập tên sách"
+	                     required>
+	            </div>
+
+	            <div class="row">
+	              <div class="col-md-6 mb-3">
+	                <label class="form-label">Tác giả</label>
+	                <input type="text"
+	                       name="authorName"
+	                       class="form-control"
+	                       list="authorOptions"
+	                       placeholder="Nhập tên tác giả"
+	                       required>
+
+	                <datalist id="authorOptions">
+	                  <option th:each="a : ${authors}"
+	                          th:value="${a.name}">
+	                  </option>
+	                </datalist>
+	              </div>
+
+	              <div class="col-md-6 mb-3">
+	                <label class="form-label">Nhà xuất bản</label>
+	                <input type="text"
+	                       name="publisherName"
+	                       class="form-control"
+	                       list="publisherOptions"
+	                       placeholder="Nhập nhà xuất bản"
+	                       required>
+
+	                <datalist id="publisherOptions">
+	                  <option th:each="p : ${publishers}"
+	                          th:value="${p.name}">
+	                  </option>
+	                </datalist>
+	              </div>
+	            </div>
+
+	            <div class="row">
+	              <div class="col-md-6 mb-3">
+	                <label class="form-label">Thể loại</label>
+	                <select name="categoryId"
+	                        class="form-select"
+	                        required>
+
+	                  <option value="">-- Chọn thể loại --</option>
+	                  <option th:each="c : ${categories}"
+	                          th:value="${c.id}"
+	                          th:text="${c.name}">
+	                  </option>
+	                </select>
+	              </div>
+
+	              <div class="col-md-6 mb-3">
+	                <label class="form-label">Năm xuất bản</label>
+	                <input type="number"
+	                       name="publishYear"
+	                       class="form-control"
+	                       min="1000"
+	                       max="2100"
+	                       placeholder="Ví dụ: 2024"
+	                       required>
+	              </div>
+	            </div>
+
+	            <div class="mb-3">
+	              <label class="form-label">Mô tả</label>
+	              <textarea name="description"
+	                        class="form-control"
+	                        rows="3"
+	                        placeholder="Nhập mô tả sách"></textarea>
+	            </div>
+
+	            <div class="small text-secondary">
+	              ISBN sẽ được hệ thống tự động tạo khi thêm sách.
+	            </div>
+
+	          </div>
+
+	          <div class="modal-footer">
+	            <button type="button"
+	                    class="btn btn-outline-secondary"
+	                    data-bs-dismiss="modal">
+	              Hủy bỏ
+	            </button>
+
+	            <button type="submit" class="btn btn-primary">
+	              Lưu sách
+	            </button>
+	          </div>
+
+	        </form>
+	      </div>
+	    </div>
+
+		  <!-- Modal sửa sách -->
+		  <div class="modal fade"
+		  id="editBookModal"
+		  tabindex="-1"
+		  th:if="${editingBook != null}"
+		  th:classappend="' show d-block'">
+		      <div class="modal-dialog modal-lg">
+		          <form class="modal-content"
+		                th:action="@{/books/save}"
+		                method="post">
+
+						<input type="hidden"
+						name="id"
+						th:value="${editingBook != null ? editingBook.id : ''}">
+						
+		              <div class="modal-header">
+		                  <h5 class="modal-title">Sửa thông tin sách</h5>
+						  <a th:href="@{/books(q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${data.number})}"
+						  class="btn-close"
+						  aria-label="Đóng"></a>
+		              </div>
+
+		              <div class="modal-body">
+
+						<div class="mb-3">
+						    <label class="form-label">Tên sách</label>
+						    <input type="text"
+						           name="title"
+						           class="form-control"
+						           th:value="${editingBook.title}"
+						           required>
+						</div>
+
+						<div class="row">
+						    <div class="col-md-6 mb-3">
+						        <label class="form-label">Tác giả</label>
+						        <input type="text"
+						               name="authorName"
+						               class="form-control"
+						               th:value="${editingAuthorName}"
+						               required>
+						    </div>
+
+						    <div class="col-md-6 mb-3">
+						        <label class="form-label">Nhà xuất bản</label>
+						        <input type="text"
+						               name="publisherName"
+						               class="form-control"
+						               th:value="${editingPublisherName}"
+						               required>
+						    </div>
+						</div>
+
+						<div class="row">
+						    <div class="col-md-6 mb-3">
+						        <label class="form-label">Thể loại</label>
+						        <select name="categoryId" class="form-select" required>
+						            <option value="">-- Chọn thể loại --</option>
+
+						            <option th:each="c : ${categories}"
+						                    th:value="${c.id}"
+						                    th:text="${c.name}"
+						                    th:selected="${c.id == editingBook.categoryId}">
+						            </option>
+						        </select>
+						    </div>
+
+						    <div class="col-md-6 mb-3">
+						        <label class="form-label">Năm xuất bản</label>
+						        <input type="number"
+						               name="publishYear"
+						               class="form-control"
+						               th:value="${editingBook.publishYear}"
+						               min="1000"
+						               max="2100"
+						               required>
+						    </div>
+						</div>
+
+						<div class="mb-3">
+						    <label class="form-label">Mô tả</label>
+						    <textarea name="description"
+						              class="form-control"
+						              rows="3"
+						              placeholder="Nhập mô tả sách"
+						              th:text="${editingBook.description}"></textarea>
+						</div>
+
+						<div class="small text-secondary">
+						    ISBN của sách được giữ nguyên khi cập nhật.
+						</div>
+
+						</div>
+
+		              <div class="modal-footer">
+						<a th:href="@{/books(q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${data.number})}"
+						   class="btn btn-outline-secondary">
+						    Hủy bỏ
+						</a>
+		                  <button type="submit" class="btn btn-primary">
+		                      Lưu thay đổi
+		                  </button>
+		              </div>
+
+		          </form>
+		      </div>
+		  </div>
+		  <div class="modal-backdrop fade show"
+		       th:if="${editingBook != null}">
+		  </div>
+
+	  </section>
+
+    </div><!-- /.page -->
+  </main>
+</th:block>
+
+
+<!-- =====================================================================
+     7. JAVASCRIPT (thay cho main.js)
+     ===================================================================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const el = id => document.getElementById(id);
+
+  // ---------- Modal tài khoản ----------
+  function openAccAdd() {
+    el('accountForm').reset();
+    el('accTitle').textContent = 'Thêm tài khoản';
+    el('accId').value = '';
+    el('accUsername').readOnly = false;
+    el('accPassword').value = '';
+  }
+
+  function openAccEdit(btn) {
+    const d = btn.dataset;
+    el('accTitle').textContent = 'Sửa tài khoản';
+    el('accId').value = d.id;
+    el('accUsername').value = d.username;
+    el('accUsername').readOnly = true;
+    el('accFullName').value = d.fullname;
+    el('accEmail').value = d.email || '';
+    el('accPassword').value = d.password || '';     // hiện mật khẩu hiện tại
+    el('accRole').value = d.role;
+    el('accActive').value = d.active;
+  }
+
+  // ---------- Modal độc giả ----------
+  function openRdAdd() {
+    el('readerForm').reset();
+    el('rdTitle').textContent = 'Thêm độc giả';
+    el('rdId').value = '';
+    el('rdUsername').readOnly = false;
+    el('rdPassword').value = '';
+  }
+
+  function openRdEdit(btn) {
+    const d = btn.dataset;
+    el('rdTitle').textContent = 'Sửa độc giả';
+    el('rdId').value = d.id;
+    el('rdCode').value = d.code;
+    el('rdFullName').value = d.fullname;
+    el('rdEmail').value = d.email || '';
+    el('rdUsername').value = d.username;
+    el('rdUsername').readOnly = true;
+    el('rdPassword').value = d.password || '';      // hiện mật khẩu hiện tại
+    el('rdPhone').value = d.phone || '';
+    el('rdAddress').value = d.address || '';
+    el('rdBirth').value = d.birth || '';
+    el('rdActive').value = d.active;
+  }
+</script>
+</body>
+</html>

@@ -48,7 +48,7 @@ CREATE TABLE roles (
 CREATE TABLE accounts (
     id         BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
     username   VARCHAR(50)  NOT NULL UNIQUE,
-    password   VARCHAR(255) NOT NULL,                 -- mã hóa BCrypt
+    password   VARCHAR(255) NOT NULL,                 -- mật khẩu dạng chữ thường (bản demo)
     full_name  VARCHAR(100) NOT NULL,
     email      VARCHAR(100),
     role_code  INT          NOT NULL DEFAULT 2,
@@ -68,10 +68,10 @@ CREATE TABLE readers (
     birth_date  DATE,
     active      BIT(1)       NOT NULL DEFAULT b'1',
     created_at  DATE,
-    account_id  BIGINT       UNIQUE,                  -- tài khoản đăng nhập (có thể chưa có)
+    account_id  BIGINT       NOT NULL UNIQUE,         -- mỗi độc giả bắt buộc có 1 tài khoản đăng nhập
 
     CONSTRAINT fk_readers_account FOREIGN KEY (account_id)
-        REFERENCES accounts (id) ON DELETE SET NULL
+        REFERENCES accounts (id)
 );
 
 
@@ -217,19 +217,23 @@ INSERT INTO roles (code, name, display_name, description) VALUES
 (1, 'LIBRARIAN', 'Thủ thư',       'Nhân viên quản lý thư viện'),
 (2, 'READER',    'Độc giả',       'Người sử dụng thư viện');
 
--- Tài khoản mẫu (mật khẩu đã mã hóa BCrypt):
+-- Tài khoản mẫu (mật khẩu lưu dạng chữ thường để trang quản lý hiển thị được):
 --   admin    / admin123   (vai trò 0 - Quản trị viên)
 --   thuthu01 / thuthu123  (vai trò 1 - Thủ thư)
---   docgia01 / docgia123  (vai trò 2 - Độc giả)
+--   docgia01 / docgia123  (vai trò 2 - Độc giả, hồ sơ DG002)
+--   dg001    / dg001123   (vai trò 2 - Độc giả, hồ sơ DG001)
+--   dg003    / dg003123   (vai trò 2 - Độc giả, hồ sơ DG003)
 INSERT INTO accounts (username, password, full_name, email, role_code, active) VALUES
-('admin',    '$2a$10$TEo9PAt6amq3QMW4nNKL5OwU6xTCI8vV3KpBDEIhpmvHWfBt27XGu', 'Quản trị viên',  'admin@qltv.local',   0, b'1'),
-('thuthu01', '$2a$10$14UmJVOsRxg8EjpCElF1LOiyluxCchOfcFqqWSbCSdtdQ6srV9j1G', 'Ngọc Trâm',      'thuthu@qltv.local',  1, b'1'),
-('docgia01', '$2a$10$iJhA9PEWu9k4UppM4F5eOehQz/xz3JkXPT5z28.FjfNSaOAc4w9fS', 'Trần Văn An',    'an@qltv.local',      2, b'1');
+('admin',    'admin123', 'Quản trị viên',  'admin@qltv.local',   0, b'1'),
+('thuthu01', 'thuthu123', 'Ngọc Trâm',      'thuthu@qltv.local',  1, b'1'),
+('docgia01', 'docgia123', 'Trần Văn An',    'an@qltv.local',      2, b'1'),
+('dg001',    'dg001123', 'Lê Hoàng Phương', 'phuong@qltv.local', 2, b'1'),
+('dg003',    'dg003123', 'Nguyễn Thị Mai',  'mai@qltv.local',    2, b'1');
 
 INSERT INTO readers (reader_code, full_name, email, phone, birth_date, active, created_at, account_id) VALUES
-('DG001', 'Lê Hoàng Phương', 'phuong@qltv.local', '0901000001', '2004-03-12', b'1', CURDATE(), NULL),
+('DG001', 'Lê Hoàng Phương', 'phuong@qltv.local', '0901000001', '2004-03-12', b'1', CURDATE(), 4),
 ('DG002', 'Trần Văn An',     'an@qltv.local',     '0901000002', '2005-07-21', b'1', CURDATE(), 3),
-('DG003', 'Nguyễn Thị Mai',  'mai@qltv.local',    '0901000003', '2004-11-02', b'1', CURDATE(), NULL);
+('DG003', 'Nguyễn Thị Mai',  'mai@qltv.local',    '0901000003', '2004-11-02', b'1', CURDATE(), 5);
 
 INSERT INTO categories (name) VALUES
 ('Công nghệ thông tin'), ('Văn học'), ('Kinh tế'), ('Khoa học'), ('Lịch sử');

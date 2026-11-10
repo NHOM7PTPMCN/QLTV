@@ -14,7 +14,7 @@
 <!-- =====================================================================
      1. ĐĂNG NHẬP / ĐĂNG KÝ  (view = login | register)
      ===================================================================== -->
-<div class="auth-wrap" th:if="${view == 'login' or view == 'register'}">
+<div class="auth-wrap" th:if="${view == 'login' or view == 'register' or view == 'forgot'}">
 
   <!-- ---------- Đăng nhập ---------- -->
   <form th:if="${view == 'login'}" th:action="@{/login}" method="post" class="panel auth-card">
@@ -30,6 +30,7 @@
     <div class="alert alert-danger py-2" th:if="${param.error}">Sai tên đăng nhập, mật khẩu hoặc tài khoản đã bị khóa</div>
     <div class="alert alert-info py-2" th:if="${param.logout}">Bạn đã đăng xuất</div>
     <div class="alert alert-success py-2" th:if="${param.registered}">Đăng ký thành công, hãy đăng nhập</div>
+    <div class="alert alert-success py-2" th:if="${param.reset}">Đặt lại mật khẩu thành công, hãy đăng nhập</div>
 
     <div class="mb-3">
       <label class="form-label">Tên đăng nhập</label>
@@ -38,6 +39,7 @@
     <div class="mb-3">
       <label class="form-label">Mật khẩu</label>
       <input type="password" name="password" class="form-control" required>
+      <div class="text-end small mt-1"><a th:href="@{/forgot-password}">Quên mật khẩu?</a></div>
     </div>
     <button class="btn btn-primary w-100">Đăng nhập</button>
     <div class="text-center small mt-3 text-secondary">
@@ -93,13 +95,53 @@
       Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a>
     </div>
   </form>
+
+  <!-- ---------- Quên mật khẩu ---------- -->
+  <form th:if="${view == 'forgot'}" th:action="@{/forgot-password}" method="post" class="panel auth-card">
+    <div class="brand">
+      <div class="brand-logo">L</div>
+      <div class="lh-sm">
+        <div class="fw-bold">LibraFlow</div>
+        <div class="small text-secondary">Quản lý thư viện</div>
+      </div>
+    </div>
+    <h5 class="mb-1">Quên mật khẩu</h5>
+    <div class="text-secondary small mb-3">Nhập tên đăng nhập và email đã đăng ký để đặt mật khẩu mới</div>
+
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="mb-3">
+      <label class="form-label">Tên đăng nhập</label>
+      <input type="text" name="username" class="form-control" required autofocus
+             th:value="${param.username != null ? param.username[0] : ''}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email đã đăng ký</label>
+      <input type="email" name="email" class="form-control" required
+             th:value="${param.email != null ? param.email[0] : ''}">
+    </div>
+    <div class="row">
+      <div class="col mb-3">
+        <label class="form-label">Mật khẩu mới</label>
+        <input type="password" name="password" class="form-control" minlength="6" required>
+      </div>
+      <div class="col mb-3">
+        <label class="form-label">Nhập lại</label>
+        <input type="password" name="confirm" class="form-control" minlength="6" required>
+      </div>
+    </div>
+    <button class="btn btn-primary w-100">Đặt lại mật khẩu</button>
+    <div class="text-center small mt-3 text-secondary">
+      <a th:href="@{/login}">Quay lại đăng nhập</a>
+    </div>
+  </form>
 </div>
 
 
 <!-- =====================================================================
      2. KHUNG ỨNG DỤNG: sidebar + topbar  (mọi view còn lại)
      ===================================================================== -->
-<th:block th:unless="${view == 'login' or view == 'register'}">
+<th:block th:unless="${view == 'login' or view == 'register' or view == 'forgot'}">
 
   <!-- ---------- Sidebar ----------
        Giá trị vai trò (roleCode): 0 = Admin, 1 = Thủ thư, 2 = Độc giả
@@ -163,11 +205,11 @@
 
     <!-- ---------- Topbar ---------- -->
     <header class="topbar">
-      <div class="text-end lh-sm">
+      <a th:href="@{/profile}" class="text-end lh-sm text-decoration-none text-reset" title="Thông tin cá nhân">
         <div class="small fw-semibold" sec:authentication="name"></div>
         <div class="small text-secondary"
              th:text="${roleCode == 0 ? 'Quản trị viên' : (roleCode == 1 ? 'Thủ thư' : 'Độc giả')}"></div>
-      </div>
+      </a>
       <form th:action="@{/logout}" method="post">
         <button class="btn btn-sm btn-outline-secondary">Đăng xuất</button>
       </form>
@@ -188,6 +230,87 @@
         <div class="text-secondary small mb-4">Chào mừng bạn đến với hệ thống quản lý thư viện</div>
         <div class="panel p-4">
           Xin chào <b sec:authentication="name"></b>. Chọn chức năng ở thanh menu bên trái để bắt đầu.
+        </div>
+      </section>
+
+
+      <!-- =============================================================
+           3a. THÔNG TIN CÁ NHÂN + ĐỔI MẬT KHẨU  (view = profile)
+           ============================================================= -->
+      <section th:if="${view == 'profile'}">
+        <h3 class="mb-1">Thông tin cá nhân</h3>
+        <div class="text-secondary small mb-4">Xem và cập nhật thông tin tài khoản của bạn</div>
+
+        <div class="row g-3">
+          <!-- Thông tin cá nhân -->
+          <div class="col-lg-7">
+            <form class="panel p-4" th:action="@{/profile}" method="post">
+              <h5 class="mb-3">Thông tin tài khoản</h5>
+
+              <div class="row">
+                <div class="col mb-3">
+                  <label class="form-label">Tên đăng nhập</label>
+                  <input type="text" class="form-control" th:value="${account.username}" readonly>
+                </div>
+                <div class="col mb-3">
+                  <label class="form-label">Vai trò</label>
+                  <input type="text" class="form-control" th:value="${account.role.label}" readonly>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Họ tên</label>
+                <input type="text" name="fullName" class="form-control" required th:value="${account.fullName}">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" th:value="${account.email}">
+              </div>
+
+              <!-- Chỉ hiện nếu tài khoản là độc giả -->
+              <th:block th:if="${reader != null}">
+                <div class="mb-3">
+                  <label class="form-label">Mã thẻ độc giả</label>
+                  <input type="text" class="form-control" th:value="${reader.readerCode}" readonly>
+                </div>
+                <div class="row">
+                  <div class="col mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" name="phone" class="form-control" th:value="${reader.phone}">
+                  </div>
+                  <div class="col mb-3">
+                    <label class="form-label">Ngày sinh</label>
+                    <input type="date" name="birthDate" class="form-control" th:value="${reader.birthDate}">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Địa chỉ</label>
+                  <input type="text" name="address" class="form-control" th:value="${reader.address}">
+                </div>
+              </th:block>
+
+              <button class="btn btn-primary">Lưu thay đổi</button>
+            </form>
+          </div>
+
+          <!-- Đổi mật khẩu -->
+          <div class="col-lg-5">
+            <form class="panel p-4" th:action="@{/profile/password}" method="post">
+              <h5 class="mb-3">Đổi mật khẩu</h5>
+              <div class="mb-3">
+                <label class="form-label">Mật khẩu hiện tại</label>
+                <input type="password" name="oldPassword" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Mật khẩu mới</label>
+                <input type="password" name="newPassword" class="form-control" minlength="6" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nhập lại mật khẩu mới</label>
+                <input type="password" name="confirm" class="form-control" minlength="6" required>
+              </div>
+              <button class="btn btn-primary">Đổi mật khẩu</button>
+            </form>
+          </div>
         </div>
       </section>
 
@@ -238,7 +361,7 @@
                 <td th:text="${a.email}"></td>
                 <td th:text="${a.role.label}"></td>
                 <td class="text-primary" th:text="${a.username}"></td>
-                <td class="text-secondary">••••••••</td>
+                <td><span class="pw-text" th:text="${a.password}"></span></td>
                 <td>
                   <span class="badge text-bg-success" th:if="${a.active}">Hoạt động</span>
                   <span class="badge text-bg-secondary" th:unless="${a.active}">Đã khóa</span>
@@ -248,7 +371,8 @@
                           data-bs-target="#accountModal" onclick="openAccEdit(this)"
                           th:data-id="${a.id}" th:data-username="${a.username}"
                           th:data-fullname="${a.fullName}" th:data-email="${a.email}"
-                          th:data-role="${a.role.name()}" th:data-active="${a.active}">Sửa</button>
+                          th:data-role="${a.role.name()}" th:data-active="${a.active}"
+                          th:data-password="${a.password}">Sửa</button>
 
                   <form th:action="@{/accounts/{id}/toggle(id=${a.id})}" method="post" class="d-inline">
                     <button class="btn btn-sm btn-outline-warning" th:text="${a.active} ? 'Khóa' : 'Mở khóa'"></button>
@@ -302,8 +426,8 @@
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Mật khẩu</label>
-                  <input type="password" name="password" id="accPassword" class="form-control" minlength="6">
-                  <div class="form-text" id="accPwHint"></div>
+                  <input type="text" name="password" id="accPassword" class="form-control pw-text"
+                         minlength="6" autocomplete="off" required>
                 </div>
                 <div class="row">
                   <div class="col mb-3">
@@ -365,14 +489,8 @@
                   <span th:text="${r.fullName}"></span>
                 </td>
                 <td th:text="${r.email}"></td>
-                <td>
-                  <span th:if="${r.account != null}" th:text="${r.account.username}"></span>
-                  <span th:unless="${r.account != null}" class="text-secondary">—</span>
-                </td>
-                <td>
-                  <span th:if="${r.account != null}" class="text-secondary">••••••••</span>
-                  <span th:unless="${r.account != null}" class="text-secondary">—</span>
-                </td>
+                <td th:text="${r.account.username}"></td>
+                <td><span class="pw-text" th:text="${r.account.password}"></span></td>
                 <td>
                   <span class="badge text-bg-success" th:if="${r.active}">Hoạt động</span>
                   <span class="badge text-bg-secondary" th:unless="${r.active}">Ngừng hoạt động</span>
@@ -381,11 +499,13 @@
                   <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
                           data-bs-target="#readerModal" onclick="openRdEdit(this)"
                           th:data-id="${r.id}" th:data-code="${r.readerCode}" th:data-fullname="${r.fullName}"
-                          th:data-email="${r.email}" th:data-phone="${r.phone}" th:data-address="${r.address}"
-                          th:data-birth="${r.birthDate}" th:data-active="${r.active}">Sửa</button>
+                          th:data-email="${r.email}" th:data-username="${r.account.username}"
+                          th:data-phone="${r.phone}" th:data-address="${r.address}"
+                          th:data-birth="${r.birthDate}" th:data-active="${r.active}"
+                          th:data-password="${r.account.password}">Sửa</button>
 
                   <form th:action="@{/readers/{id}/delete(id=${r.id})}" method="post" class="d-inline"
-                        onsubmit="return confirm('Xóa độc giả này? Tài khoản đăng nhập của độc giả (nếu có) cũng bị xóa.')">
+                        onsubmit="return confirm('Xóa độc giả này? Tài khoản đăng nhập của độc giả cũng bị xóa.')">
                     <button class="btn btn-sm btn-outline-danger">Xóa</button>
                   </form>
                 </td>
@@ -408,7 +528,7 @@
           </div>
         </div>
 
-        <!-- Modal thêm / sửa độc giả -->
+        <!-- Modal thêm / sửa độc giả (thứ tự trường khớp với cột của bảng) -->
         <div class="modal fade" id="readerModal" tabindex="-1">
           <div class="modal-dialog">
             <form id="readerForm" class="modal-content" th:action="@{/readers/save}" method="post">
@@ -418,6 +538,7 @@
               </div>
               <div class="modal-body">
                 <input type="hidden" name="id" id="rdId">
+
                 <div class="mb-3">
                   <label class="form-label">Mã thẻ độc giả</label>
                   <input type="text" name="readerCode" id="rdCode" class="form-control"
@@ -427,32 +548,46 @@
                   <label class="form-label">Họ tên</label>
                   <input type="text" name="fullName" id="rdFullName" class="form-control" required>
                 </div>
+                <div class="mb-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" name="email" id="rdEmail" class="form-control">
+                </div>
+
                 <div class="row">
-                  <div class="col mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" id="rdEmail" class="form-control">
+                  <div class="col mb-1">
+                    <label class="form-label">Tài khoản (tên đăng nhập)</label>
+                    <input type="text" name="username" id="rdUsername" class="form-control"
+                           minlength="4" autocomplete="off" required>
                   </div>
+                  <div class="col mb-1">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="text" name="password" id="rdPassword" class="form-control pw-text"
+                           minlength="6" autocomplete="off" required>
+                  </div>
+                </div>
+                <div class="mb-3"></div>
+
+                <div class="mb-3">
+                  <label class="form-label">Trạng thái</label>
+                  <select name="active" id="rdActive" class="form-select">
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Ngừng hoạt động</option>
+                  </select>
+                </div>
+
+                <div class="row">
                   <div class="col mb-3">
                     <label class="form-label">Số điện thoại</label>
                     <input type="text" name="phone" id="rdPhone" class="form-control">
+                  </div>
+                  <div class="col mb-3">
+                    <label class="form-label">Ngày sinh</label>
+                    <input type="date" name="birthDate" id="rdBirth" class="form-control">
                   </div>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Địa chỉ</label>
                   <input type="text" name="address" id="rdAddress" class="form-control">
-                </div>
-                <div class="row">
-                  <div class="col mb-3">
-                    <label class="form-label">Ngày sinh</label>
-                    <input type="date" name="birthDate" id="rdBirth" class="form-control">
-                  </div>
-                  <div class="col mb-3">
-                    <label class="form-label">Trạng thái</label>
-                    <select name="active" id="rdActive" class="form-select">
-                      <option value="true">Hoạt động</option>
-                      <option value="false">Ngừng hoạt động</option>
-                    </select>
-                  </div>
                 </div>
               </div>
               <div class="modal-footer">
@@ -463,8 +598,8 @@
           </div>
         </div>
       </section>
-	  
-	  
+
+
 	  <!-- =============================================================
 	       6. QUẢN LÝ SÁCH (view = books)
 	       ============================================================= -->
@@ -758,11 +893,6 @@
 	        </form>
 	      </div>
 	    </div>
-		</form>
-
-		    </div>
-
-		  </div>
 
 		  <!-- Modal sửa sách -->
 		  <div class="modal fade"
@@ -875,7 +1005,6 @@
 		       th:if="${editingBook != null}">
 		  </div>
 
-		</section>
 	  </section>
 
     </div><!-- /.page -->
@@ -896,8 +1025,7 @@
     el('accTitle').textContent = 'Thêm tài khoản';
     el('accId').value = '';
     el('accUsername').readOnly = false;
-    el('accPassword').required = true;
-    el('accPwHint').textContent = '';
+    el('accPassword').value = '';
   }
 
   function openAccEdit(btn) {
@@ -908,11 +1036,9 @@
     el('accUsername').readOnly = true;
     el('accFullName').value = d.fullname;
     el('accEmail').value = d.email || '';
+    el('accPassword').value = d.password || '';     // hiện mật khẩu hiện tại
     el('accRole').value = d.role;
     el('accActive').value = d.active;
-    el('accPassword').value = '';
-    el('accPassword').required = false;
-    el('accPwHint').textContent = 'Để trống nếu không đổi mật khẩu';
   }
 
   // ---------- Modal độc giả ----------
@@ -920,6 +1046,8 @@
     el('readerForm').reset();
     el('rdTitle').textContent = 'Thêm độc giả';
     el('rdId').value = '';
+    el('rdUsername').readOnly = false;
+    el('rdPassword').value = '';
   }
 
   function openRdEdit(btn) {
@@ -929,6 +1057,9 @@
     el('rdCode').value = d.code;
     el('rdFullName').value = d.fullname;
     el('rdEmail').value = d.email || '';
+    el('rdUsername').value = d.username;
+    el('rdUsername').readOnly = true;
+    el('rdPassword').value = d.password || '';      // hiện mật khẩu hiện tại
     el('rdPhone').value = d.phone || '';
     el('rdAddress').value = d.address || '';
     el('rdBirth').value = d.birth || '';

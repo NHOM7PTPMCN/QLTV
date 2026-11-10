@@ -40,6 +40,12 @@ body { min-height: 100vh; background: #070b17; }
   font-size: .75rem; margin-right: .5rem;
 }
 
+/* Mật khẩu hiển thị dạng chữ, font đơn cách */
+.pw-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  color: #cbd5e1;
+}
+
 @media (max-width: 768px) {
   .sidebar { position: static; width: 100%; }
   .content { margin-left: 0; }

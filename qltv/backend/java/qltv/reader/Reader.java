@@ -14,7 +14,7 @@ public class Reader {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 30)
-    private String readerCode;          // ví dụ SV2022096
+    private String readerCode;          // mã thẻ độc giả, ví dụ DG001
 
     @Column(nullable = false, length = 100)
     private String fullName;
@@ -34,9 +34,9 @@ public class Reader {
 
     private LocalDate createdAt;
 
-    // Tài khoản đăng nhập của độc giả (có thể chưa có)
-    @OneToOne
-    @JoinColumn(name = "account_id", unique = true)
+    // Tài khoản đăng nhập của độc giả (bắt buộc)
+    @OneToOne(optional = false)
+    @JoinColumn(name = "account_id", nullable = false, unique = true)
     private Account account;
 
     @PrePersist

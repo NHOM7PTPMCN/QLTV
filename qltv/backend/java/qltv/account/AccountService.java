@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import qltv.reader.Reader;
 import qltv.reader.ReaderRepository;
 
+import java.time.LocalDate;
+
 /** Vua xu ly tai khoan, vua dung de Spring Security kiem tra dang nhap. */
 @Service
 public class AccountService implements UserDetailsService {
@@ -29,7 +31,7 @@ public class AccountService implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ===================== ĐĂNG NHẬP =====================
+    // ===================== ĐĂNG NHẬP (KAN-4) =====================
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account a = accountRepository.findByUsername(username)
@@ -41,7 +43,7 @@ public class AccountService implements UserDetailsService {
                 .build();
     }
 
-    // ===================== ĐĂNG KÝ (độc giả tự đăng ký) =====================
+    // ===================== ĐĂNG KÝ (KAN-3) =====================
     @Transactional
     public void register(String username, String fullName, String email,
                          String password, String confirm, String readerCode) {
@@ -54,12 +56,8 @@ public class AccountService implements UserDetailsService {
         if (!username.matches("[A-Za-z0-9_.]+")) {
             throw new IllegalArgumentException("Tên đăng nhập chỉ gồm chữ không dấu, số, dấu . và _");
         }
-        if (password == null || password.length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu tối thiểu 6 ký tự");
-        }
-        if (!password.equals(confirm)) {
-            throw new IllegalArgumentException("Mật khẩu nhập lại không khớp");
-        }
+        checkEmail(email);
+        validateNewPassword(password, confirm);
         if (accountRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Tên đăng nhập đã tồn tại");
         }
@@ -88,6 +86,70 @@ public class AccountService implements UserDetailsService {
         readerRepository.save(reader);
     }
 
+    // ===================== QUÊN MẬT KHẨU (KAN-5) =====================
+    // Xác minh bằng tên đăng nhập + email đã đăng ký, khớp thì cho đặt mật khẩu mới.
+    @Transactional
+    public void resetPassword(String username, String email, String newPassword, String confirm) {
+        Account acc = accountRepository.findByUsername(username.trim()).orElse(null);
+        boolean matched = acc != null
+                && acc.isActive()
+                && acc.getEmail() != null
+                && acc.getEmail().equalsIgnoreCase(email.trim());
+        if (!matched) {
+            // Thông báo chung, không tiết lộ tên đăng nhập có tồn tại hay không
+            throw new IllegalArgumentException("Tên đăng nhập và email không khớp với tài khoản nào");
+        }
+        validateNewPassword(newPassword, confirm);
+        acc.setPassword(passwordEncoder.encode(newPassword));
+    }
+
+    // ===================== ĐỔI MẬT KHẨU (KAN-6) =====================
+    @Transactional
+    public void changePassword(String username, String oldPassword, String newPassword, String confirm) {
+        Account acc = findByUsername(username);
+        if (!passwordEncoder.matches(oldPassword, acc.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không đúng");
+        }
+        validateNewPassword(newPassword, confirm);
+        if (passwordEncoder.matches(newPassword, acc.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu mới phải khác mật khẩu hiện tại");
+        }
+        acc.setPassword(passwordEncoder.encode(newPassword));
+    }
+
+    // ===================== THÔNG TIN CÁ NHÂN (KAN-7) =====================
+    public Account findByUsername(String username) {
+        return accountRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản"));
+    }
+
+    /** Hồ sơ độc giả gắn với tài khoản (null nếu là Quản trị viên / Thủ thư). */
+    public Reader findReaderOf(Account acc) {
+        return readerRepository.findByAccount(acc).orElse(null);
+    }
+
+    @Transactional
+    public void updateProfile(String username, String fullName, String email,
+                              String phone, String address, LocalDate birthDate) {
+        if (fullName == null || fullName.isBlank()) {
+            throw new IllegalArgumentException("Họ tên không được để trống");
+        }
+        checkEmail(email);
+
+        Account acc = findByUsername(username);
+        acc.setFullName(fullName.trim());
+        acc.setEmail(blankToNull(email));
+
+        // Nếu là độc giả thì cập nhật luôn hồ sơ độc giả (đồng bộ họ tên + email)
+        readerRepository.findByAccount(acc).ifPresent(r -> {
+            r.setFullName(acc.getFullName());
+            r.setEmail(acc.getEmail());
+            r.setPhone(blankToNull(phone));
+            r.setAddress(blankToNull(address));
+            r.setBirthDate(birthDate);
+        });
+    }
+
     // ===================== QUẢN LÝ TÀI KHOẢN (admin) =====================
     // Trang này chỉ quản lý Quản trị viên và Thủ thư. Tài khoản Độc giả được quản lý
     // qua hồ sơ độc giả (đăng ký / trang Quản lý độc giả).
@@ -102,6 +164,7 @@ public class AccountService implements UserDetailsService {
     public void save(Long id, String username, String fullName, String email,
                      String password, String role, boolean active) {
         Role newRole = parseStaffRole(role);
+        checkEmail(email);
         boolean hasPassword = password != null && !password.isBlank();
         Account acc;
 
@@ -148,9 +211,10 @@ public class AccountService implements UserDetailsService {
         if (acc.getUsername().equals(currentUsername)) {
             throw new IllegalArgumentException("Không thể xóa chính tài khoản đang đăng nhập");
         }
-        readerRepository.findByAccount(acc).ifPresent(r -> r.setAccount(null));   // gỡ liên kết (nếu có)
         accountRepository.delete(acc);
     }
+
+    // ===================== HÀM DÙNG CHUNG =====================
 
     /** Chỉ chấp nhận ADMIN hoặc LIBRARIAN. */
     private Role parseStaffRole(String role) {
@@ -174,6 +238,22 @@ public class AccountService implements UserDetailsService {
             throw new IllegalArgumentException("Tài khoản độc giả được quản lý ở trang Quản lý độc giả");
         }
         return acc;
+    }
+
+    private void validateNewPassword(String password, String confirm) {
+        if (password == null || password.length() < 6) {
+            throw new IllegalArgumentException("Mật khẩu tối thiểu 6 ký tự");
+        }
+        if (!password.equals(confirm)) {
+            throw new IllegalArgumentException("Mật khẩu nhập lại không khớp");
+        }
+    }
+
+    private void checkEmail(String email) {
+        if (email != null && !email.isBlank()
+                && !email.trim().matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            throw new IllegalArgumentException("Email không hợp lệ");
+        }
     }
 
     private String blankToNull(String s) {

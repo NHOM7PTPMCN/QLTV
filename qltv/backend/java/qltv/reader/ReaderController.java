@@ -41,9 +41,12 @@ public class ReaderController {
                        @RequestParam(required = false)
                        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate birthDate,
                        @RequestParam(defaultValue = "true") boolean active,
+                       @RequestParam(required = false) String username,
+                       @RequestParam(required = false) String password,
                        RedirectAttributes ra) {
         try {
-            readerService.save(id, readerCode, fullName, email, phone, address, birthDate, active);
+            readerService.save(id, readerCode, fullName, email, phone, address, birthDate, active,
+                    username, password);
             ra.addFlashAttribute("success", "Lưu độc giả thành công");
         } catch (IllegalArgumentException e) {
             ra.addFlashAttribute("error", e.getMessage());
