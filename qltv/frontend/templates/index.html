@@ -614,11 +614,12 @@
 	        </div>
 	      </div>
 
-	      <button class="btn btn-primary"
-	              data-bs-toggle="modal"
-	              data-bs-target="#addBookModal">
-	        + Thêm sách
-	      </button>
+		  <button class="btn btn-primary"
+		          sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')"
+		          data-bs-toggle="modal"
+		          data-bs-target="#addBookModal">
+		      + Thêm sách
+		  </button>
 	    </div>
 
 	    <!-- Tìm kiếm và lọc -->
@@ -717,21 +718,23 @@
 				      </button>
 
 					  <!-- Nút Sửa -->
-					  <a th:href="@{/books(editId=${b.id}, q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${data.number})}"
+					  <a sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')"
+					     th:href="@{/books(editId=${b.id}, q=${q}, categoryId=${categoryId}, publishYear=${publishYear}, page=${data.number})}"
 					     class="btn btn-sm btn-outline-warning">
 					      Sửa
 					  </a>
 
 					  <!-- Nút Xóa -->
-				      <form th:action="@{/books/{id}/delete(id=${b.id})}"
-				            method="post"
-				            class="d-inline"
-				            onsubmit="return confirm('Bạn có chắc muốn xóa sách này?')">
+					  <form sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')"
+					        th:action="@{/books/{id}/delete(id=${b.id})}"
+					        method="post"
+					        class="d-inline"
+					        onsubmit="return confirm('Bạn có chắc muốn xóa sách này?')">
 
-				          <button type="submit" class="btn btn-sm btn-outline-danger">
-				              Xóa
-				          </button>
-				      </form>
+					      <button type="submit" class="btn btn-sm btn-outline-danger">
+					          Xóa
+					      </button>
+					  </form>
 				  </td>
 	            </tr>
 
@@ -775,7 +778,10 @@
 	    </div>
 
 	    <!-- Modal thêm sách -->
-	    <div class="modal fade" id="addBookModal" tabindex="-1">
+		<div class="modal fade"
+		id="addBookModal"
+		tabindex="-1"
+		sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
 	      <div class="modal-dialog modal-lg">
 
 			<form id="bookForm" class="modal-content"
@@ -898,6 +904,7 @@
 		  <div class="modal fade"
 		  id="editBookModal"
 		  tabindex="-1"
+		  sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')"
 		  th:if="${editingBook != null}"
 		  th:classappend="' show d-block'">
 		      <div class="modal-dialog modal-lg">
