@@ -614,11 +614,12 @@
 	        </div>
 	      </div>
 
-	      <button class="btn btn-primary"
-	              data-bs-toggle="modal"
-	              data-bs-target="#addBookModal">
-	        + Thêm sách
-	      </button>
+		  <button th:if="${#authorization.expression('hasAnyRole(''ADMIN'', ''LIBRARIAN'')')}"
+		          class="btn btn-primary"
+		          data-bs-toggle="modal"
+		          data-bs-target="#addBookModal">
+		      + Thêm sách
+		  </button>
 	    </div>
 
 	    <!-- Tìm kiếm và lọc -->
@@ -674,7 +675,8 @@
 	              <th>Tác giả</th>
 	              <th>Thể loại</th>
 	              <th>Nhà xuất bản</th>
-	              <th class="text-end">Thao tác</th>
+				  <th th:if="${#authorization.expression('hasAnyRole(''ADMIN'', ''LIBRARIAN'')')}"
+				  class="text-end">Thao tác</th>
 	            </tr>
 	          </thead>
 
@@ -696,7 +698,8 @@
 	              <td th:text="${categoryNames[b.categoryId]}"></td>
 	              <td th:text="${publisherNames[b.publisherId]}"></td>
 
-				  <td class="text-end text-nowrap">
+				  <td th:if="${#authorization.expression('hasAnyRole(''ADMIN'', ''LIBRARIAN'')')}"
+				  class="text-end text-nowrap">
 
 				      <!-- Nút Xem -->
 				      <button type="button"
@@ -775,7 +778,8 @@
 	    </div>
 
 	    <!-- Modal thêm sách -->
-	    <div class="modal fade" id="addBookModal" tabindex="-1">
+		<div th:if="${#authorization.expression('hasAnyRole(''ADMIN'', ''LIBRARIAN'')')}"
+		class="modal fade" id="addBookModal" tabindex="-1">
 	      <div class="modal-dialog modal-lg">
 
 			<form id="bookForm" class="modal-content"
@@ -898,7 +902,7 @@
 		  <div class="modal fade"
 		  id="editBookModal"
 		  tabindex="-1"
-		  th:if="${editingBook != null}"
+		  th:if="${editingBook != null and #authorization.expression('hasAnyRole(''ADMIN'', ''LIBRARIAN'')')}"
 		  th:classappend="' show d-block'">
 		      <div class="modal-dialog modal-lg">
 		          <form class="modal-content"
@@ -1002,7 +1006,7 @@
 		      </div>
 		  </div>
 		  <div class="modal-backdrop fade show"
-		       th:if="${editingBook != null}">
+		       th:if="${editingBook != null and #authorization.expression('hasAnyRole(''ADMIN'', ''LIBRARIAN'')')}">
 		  </div>
 
 	  </section>
